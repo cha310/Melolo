@@ -48,8 +48,8 @@ export async function GET(request: Request) {
     let command
 
     if (isAudio) {
-      // For audio-only downloads
-      command = `yt-dlp -f ${format} -x --audio-format mp3 -o "${outputPath}.%(ext)s" "${youtubeUrl}"`
+      // For audio-only downloads (download original format without conversion)
+      command = `yt-dlp -f ${format} -o "${outputPath}.%(ext)s" "${youtubeUrl}"`
     } else {
       // For video downloads
       command = `yt-dlp -f ${format} -o "${outputPath}.%(ext)s" "${youtubeUrl}"`
@@ -99,8 +99,16 @@ export async function GET(request: Request) {
     // Prepare the response
     const response = new NextResponse(fileContent)
 
-    // Set appropriate headers
-    const contentType = isAudio ? "audio/mpeg" : "video/mp4"
+    // Set appropriate headers based on file extension
+    let contentType = "application/octet-stream" // default
+    if (isAudio) {
+      if (fileExt === 'mp3') contentType = "audio/mpeg"
+      else if (fileExt === 'webm') contentType = "audio/webm"
+      else if (fileExt === 'm4a') contentType = "audio/mp4"
+    } else {
+      if (fileExt === 'mp4') contentType = "video/mp4"
+      else if (fileExt === 'webm') contentType = "video/webm"
+    }
     const fileName = `melolo_download.${fileExt}`
     
     response.headers.set("Content-Disposition", `attachment; filename="${fileName}"`)
