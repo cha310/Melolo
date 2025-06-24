@@ -22,7 +22,7 @@ export function FeaturesSection() {
               </div>
               <h3 className="text-xl font-bold mb-4" style={{ color: '#2d3748' }}>High Quality Downloads</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Download YouTube videos in crystal-clear quality completely free without any limitations or hidden fees.
+                Download YouTube videos in crystal-clear quality completely free, no limits or hidden fees.
               </p>
             </div>
           </FadeInSection>

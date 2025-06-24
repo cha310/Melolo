@@ -32,7 +32,7 @@ export function Navigation() {
               </div>
               <div className="absolute top-full left-0 w-64 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <Link
-                  href="/youtube-downloader"
+                  href="/"
                   className="block px-6 py-4 text-base text-gray-700 hover:bg-gray-100 hover:text-[#6122f2] transition-colors"
                 >
                   YouTube Downloader
@@ -43,10 +43,6 @@ export function Navigation() {
             {/* Direct Links */}
             <Link href="/blog" className="text-gray-700 hover:text-[#6122f2] transition-colors">
               Blog
-            </Link>
-
-            <Link href="/faqs" className="text-gray-700 hover:text-[#6122f2] transition-colors">
-              FAQs
             </Link>
           </div>
 
@@ -69,11 +65,6 @@ export function Navigation() {
                 <DropdownMenuItem asChild>
                   <Link href="/blog" className="flex items-center">
                     Blog
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/faqs" className="flex items-center">
-                    FAQs
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -22,7 +22,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#downloader-section" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/#downloader" className="text-gray-400 hover:text-white transition-colors">
                   Downloader
                 </Link>
               </li>
