@@ -25,35 +25,35 @@ export function Navigation() {
             </Link>
           </div>
 
-          {/* Navigation Items - positioned right next to brand */}
-          <div className="hidden md:flex items-center ml-8 space-x-6">
-            <div className="relative group">
-              <Button
-                variant="ghost"
-                className="flex items-center space-x-1 text-gray-700 hover:text-purple-600 group-hover:text-purple-600"
-              >
-                <span>Free Tools</span>
-                <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
-              </Button>
-
-              {/* Dropdown content that appears on hover */}
-              <div className="absolute left-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="py-1">
+          {/* Main Navigation */}
+          <div className="hidden md:flex items-center space-x-8 ml-8">
+            {/* Products Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-1 text-gray-700 group transition-colors" style={{ '--hover-color': '#6122f2' } as React.CSSProperties}>
+                  <span className="group-hover:text-[#6122f2] transition-colors">Products</span>
+                  <ChevronDown className="h-4 w-4 group-hover:text-[#6122f2] transition-colors" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem>
                   <Link
-                    href="/"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600 transition-colors"
+                    href="/youtube-downloader"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    style={{ '--hover-text-color': '#6122f2' } as React.CSSProperties}
                   >
-                    YouTube Video Downloader
+                    YouTube Downloader
                   </Link>
-                </div>
-              </div>
-            </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            <Link href="/blog" className="text-gray-700 hover:text-purple-600 transition-colors">
+            {/* Direct Links */}
+            <Link href="/blog" className="text-gray-700 hover:text-[#6122f2] transition-colors">
               Blog
             </Link>
 
-            <Link href="/faqs" className="text-gray-700 hover:text-purple-600 transition-colors">
+            <Link href="/faqs" className="text-gray-700 hover:text-[#6122f2] transition-colors">
               FAQs
             </Link>
           </div>

@@ -1,11 +1,11 @@
 "use client"
 
 import type React from "react"
-
+import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Download, AlertCircle } from "lucide-react"
+import { Loader2, Download, AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface VideoInfo {
@@ -29,12 +29,12 @@ export function DownloaderSection() {
     e.preventDefault()
 
     if (!url.trim()) {
-      setError("Please enter a YouTube URL")
+      setError("请输入 YouTube 视频链接")
       return
     }
 
     if (!url.includes("youtube.com/") && !url.includes("youtu.be/")) {
-      setError("Please enter a valid YouTube URL")
+      setError("请输入有效的 YouTube 视频链接")
       return
     }
 
@@ -51,46 +51,96 @@ export function DownloaderSection() {
         body: JSON.stringify({ url }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to fetch video information")
+        throw new Error(data.message || "获取视频信息失败")
       }
 
-      const data = await response.json()
       setVideoInfo(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred")
+      let errorMessage = "发生未知错误，请稍后重试"
+      
+      if (err instanceof Error) {
+        errorMessage = err.message
+      } else if (typeof err === 'string') {
+        errorMessage = err
+      }
+      
+      // 处理网络错误
+      if (errorMessage.includes('Failed to fetch')) {
+        errorMessage = "网络连接失败，请检查网络连接后重试"
+      }
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   const handleDownload = async (downloadUrl: string) => {
-    window.open(downloadUrl, "_blank")
+    try {
+      const response = await fetch(downloadUrl)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "下载失败")
+      }
+      
+      // 检查响应是否为文件
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "下载失败")
+      }
+      
+      window.open(downloadUrl, "_blank")
+    } catch (err) {
+      let errorMessage = "下载失败，请稍后重试"
+      
+      if (err instanceof Error) {
+        errorMessage = err.message
+      }
+      
+      setError(errorMessage)
+    }
   }
 
   return (
-    <section id="downloader-section" className="py-16 px-4 bg-white">
-      <div className="container mx-auto max-w-4xl">
-        <h2 className="text-3xl font-bold text-center mb-8 text-purple-900">Download YouTube Videos</h2>
-
+    <section id="downloader-section" className="py-0 px-4 bg-white">
+      <div className="container mx-auto max-w-10xl px-8">
         <form onSubmit={handleSubmit} className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex items-center gap-0 bg-white rounded-xl shadow-lg border border-gray-200 p-4 w-full max-w-7xl mx-auto">
+            {/* YouTube Icon */}
+            <div className="flex-shrink-0 pl-6 pr-4">
+              <Image
+                src="/icons/YouTube.svg"
+                alt="YouTube"
+                width={64}
+                height={64}
+                className="w-12 h-12"
+              />
+            </div>
+            
+            {/* Input Field */}
             <Input
               type="text"
-              placeholder="Paste YouTube URL here..."
+              placeholder="Input your Youtube URL"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="flex-1 p-6 text-lg border-2 border-gray-300 rounded-lg"
+              className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-xl px-4 py-4 text-gray-600 placeholder:text-gray-400"
             />
+            
+            {/* Download Button */}
             <Button
               type="submit"
-              className="bg-purple-600 hover:bg-purple-700 text-white p-6 text-lg rounded-lg"
+              className="text-white px-12 py-6 text-xl rounded-lg font-medium shadow-lg flex-shrink-0"
+              style={{ backgroundColor: '#6122f2' }}
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-5 h-8 w-8 animate-spin" />
                   Processing...
                 </>
               ) : (
@@ -99,6 +149,26 @@ export function DownloaderSection() {
             </Button>
           </div>
         </form>
+
+        {/* Features Section */}
+        <div className="flex flex-wrap justify-center items-center gap-8 mb-8">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            <span className="text-gray-600 font-medium">Free and Unlimited</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            <span className="text-gray-600 font-medium">No Signup Required</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            <span className="text-gray-600 font-medium">Fast Conversion</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            <span className="text-gray-600 font-medium">No Ads</span>
+          </div>
+        </div>
 
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -131,7 +201,8 @@ export function DownloaderSection() {
                         </div>
                         <Button
                           onClick={() => handleDownload(format.url)}
-                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                          className="text-white"
+                          style={{ backgroundColor: '#6122f2' }}
                         >
                           <Download className="mr-2 h-4 w-4" />
                           Download

@@ -4,7 +4,7 @@ export function FaqSection() {
   return (
     <section className="py-16 px-4 bg-gray-50">
       <div className="container mx-auto max-w-4xl">
-        <h2 className="text-3xl font-bold text-center mb-12 text-purple-900">Frequently Asked Questions</h2>
+        <h2 className="text-3xl font-bold text-center mb-12" style={{ color: '#6122f2' }}>Frequently Asked Questions</h2>
 
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1">
