@@ -10,6 +10,11 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Melolo - Free YouTube Video Downloader",
   description: "Download YouTube videos for free in high quality. No registration required.",
+  icons: {
+    icon: "/icons/Melolo logo.png",
+    shortcut: "/icons/Melolo logo.png",
+    apple: "/icons/Melolo logo.png",
+  },
 }
 
 export default function RootLayout({
