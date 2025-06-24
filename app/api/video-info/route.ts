@@ -4,6 +4,10 @@ import { promisify } from "util"
 
 const execPromise = promisify(exec)
 
+// Simple in-memory cache for video info (expires after 10 minutes)
+const videoInfoCache = new Map<string, { data: any, timestamp: number }>()
+const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
+
 export async function POST(request: Request) {
   try {
     const { url } = await request.json()
@@ -17,6 +21,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Invalid YouTube URL" }, { status: 400 })
     }
 
+    // Check cache first
+    const cacheKey = url
+    const cachedData = videoInfoCache.get(cacheKey)
+    if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
+      console.log("Returning cached video info")
+      return NextResponse.json(cachedData.data)
+    }
+
     // Check if yt-dlp is available
     try {
       await execPromise("which yt-dlp")
@@ -27,10 +39,11 @@ export async function POST(request: Request) {
       }, { status: 503 })
     }
 
-    // Get video info using yt-dlp
-    const command = `yt-dlp --dump-json --no-playlist "${url}"`
+    // Get video info using yt-dlp with optimization flags
+    // Only get essential info for faster processing
+    const command = `yt-dlp --dump-json --no-playlist --skip-download --no-warnings --quiet --no-check-certificate --socket-timeout 10 --no-call-home --no-cache-dir --ignore-errors "${url}"`
 
-    const { stdout, stderr } = await execPromise(command)
+    const { stdout, stderr } = await execPromise(command, { timeout: 15000 }) // 15 seconds timeout
 
     if (stderr && !stdout) {
       console.error("Error executing yt-dlp:", stderr)
@@ -161,6 +174,20 @@ export async function POST(request: Request) {
       thumbnail: videoData.thumbnail || videoData.thumbnails?.[0]?.url || "/placeholder.svg",
       duration: videoData.duration || 0,
       formats: availableFormats,
+    }
+
+    // Cache the result
+    videoInfoCache.set(cacheKey, {
+      data: videoInfo,
+      timestamp: Date.now()
+    })
+
+    // Clean up old cache entries (keep cache size manageable)
+    if (videoInfoCache.size > 100) {
+      const oldestKey = videoInfoCache.keys().next().value
+      if (oldestKey) {
+        videoInfoCache.delete(oldestKey)
+      }
     }
 
     return NextResponse.json(videoInfo)
