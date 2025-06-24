@@ -29,19 +29,48 @@ export async function POST(request: Request) {
       return NextResponse.json(cachedData.data)
     }
 
-    // Check if yt-dlp is available
+    // Check if yt-dlp is available with multiple possible paths
+    let ytDlpPath = 'yt-dlp'
     try {
-      await execPromise("which yt-dlp")
+      // Try to find yt-dlp in the system
+      const { stdout } = await execPromise("which yt-dlp")
+      ytDlpPath = stdout.trim()
+      console.log(`Found yt-dlp at: ${ytDlpPath}`)
     } catch (error) {
-      console.error("yt-dlp not found:", error)
-      return NextResponse.json({ 
-        message: "Video download service is currently unavailable. Please try again later." 
-      }, { status: 503 })
+      console.log("yt-dlp not found in PATH, trying common paths...")
+      // Try common installation paths
+      const commonPaths = [
+        '/usr/local/bin/yt-dlp',
+        '/opt/homebrew/bin/yt-dlp', 
+        '/usr/bin/yt-dlp',
+        'yt-dlp'
+      ]
+      
+      let found = false
+      for (const path of commonPaths) {
+        try {
+          await execPromise(`${path} --version`)
+          ytDlpPath = path
+          found = true
+          console.log(`Found yt-dlp at: ${path}`)
+          break
+        } catch (e) {
+          console.log(`yt-dlp not found at: ${path}`)
+          continue
+        }
+      }
+      
+      if (!found) {
+        console.error("yt-dlp not found in any common paths:", error)
+        return NextResponse.json({ 
+          message: "Video download service is currently unavailable. Please try again later." 
+        }, { status: 503 })
+      }
     }
 
     // Get video info using yt-dlp with optimization flags
     // Only get essential info for faster processing
-    const command = `yt-dlp --dump-json --no-playlist --skip-download --no-warnings --quiet --no-check-certificate --socket-timeout 10 --no-call-home --no-cache-dir --ignore-errors "${url}"`
+    const command = `${ytDlpPath} --dump-json --no-playlist --skip-download --no-warnings --quiet --no-check-certificate --socket-timeout 10 --no-call-home --no-cache-dir --ignore-errors "${url}"`
 
     const { stdout, stderr } = await execPromise(command, { timeout: 15000 }) // 15 seconds timeout
 

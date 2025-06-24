@@ -29,7 +29,7 @@ interface DownloadState {
   estimatedTime?: string
   bytesLoaded?: number
   bytesTotal?: number
-  xhr?: XMLHttpRequest // 存储XHR实例以便取消
+  xhr?: XMLHttpRequest // Store XHR instance for cancellation
 }
 
 export function DownloaderSection() {
@@ -39,7 +39,7 @@ export function DownloaderSection() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null)
   const [downloadStates, setDownloadStates] = useState<Record<number, DownloadState>>({})
   
-  // 格式化字节大小的辅助函数
+  // Helper function to format byte size
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'
     const k = 1024
@@ -52,19 +52,19 @@ export function DownloaderSection() {
     e.preventDefault()
 
     if (!url.trim()) {
-      setError("请输入 YouTube 视频链接")
+      setError("Please enter a YouTube video URL")
       return
     }
 
     if (!url.includes("youtube.com/") && !url.includes("youtu.be/")) {
-      setError("请输入有效的 YouTube 视频链接")
+      setError("Please enter a valid YouTube video URL")
       return
     }
 
     setLoading(true)
     setError("")
     setVideoInfo(null)
-    setDownloadStates({}) // 重置下载状态
+    setDownloadStates({}) // Reset download states
 
     try {
       const response = await fetch("/api/video-info", {
@@ -78,12 +78,12 @@ export function DownloaderSection() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || "获取视频信息失败")
+        throw new Error(data.message || "Failed to fetch video information")
       }
 
       setVideoInfo(data)
     } catch (err) {
-      let errorMessage = "发生未知错误，请稍后重试"
+      let errorMessage = "An unexpected error occurred, please try again later"
       
       if (err instanceof Error) {
         errorMessage = err.message
@@ -91,9 +91,9 @@ export function DownloaderSection() {
         errorMessage = err
       }
       
-      // 处理网络错误
+      // Handle network errors
       if (errorMessage.includes('Failed to fetch')) {
-        errorMessage = "网络连接失败，请检查网络连接后重试"
+        errorMessage = "Network connection failed, please check your connection and try again"
       }
       
       setError(errorMessage)
@@ -125,7 +125,7 @@ export function DownloaderSection() {
         xhr: undefined
       })
       
-      // 3秒后重置状态
+      // Reset status after 3 seconds
       setTimeout(() => {
         updateDownloadState(formatIndex, {
           status: 'idle'
@@ -136,10 +136,10 @@ export function DownloaderSection() {
 
   const handleDownload = async (downloadUrl: string, formatIndex: number) => {
     try {
-      // 创建XMLHttpRequest
+      // Create XMLHttpRequest
       const xhr = new XMLHttpRequest()
       
-      // 初始化下载状态
+      // Initialize download state
       updateDownloadState(formatIndex, {
         isDownloading: true,
         progress: 0,
@@ -147,15 +147,15 @@ export function DownloaderSection() {
         xhr: xhr
       })
       
-      // 设置响应类型为blob
+      // Set response type to blob
       xhr.responseType = 'blob'
       
-      // 用于计算下载速度的变量
+      // Variables for calculating download speed
       let startTime = Date.now()
       let lastTime = startTime
       let lastLoaded = 0
       
-      // 格式化文件大小
+      // Format file size
       const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 B'
         const k = 1024
@@ -164,16 +164,16 @@ export function DownloaderSection() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
       }
       
-      // 格式化时间
+      // Format time
       const formatTime = (seconds: number): string => {
-        if (seconds < 60) return `${Math.round(seconds)}秒`
+        if (seconds < 60) return `${Math.round(seconds)}s`
         const minutes = Math.floor(seconds / 60)
         const remainingSeconds = Math.round(seconds % 60)
-        return `${minutes}分${remainingSeconds}秒`
+        return `${minutes}m ${remainingSeconds}s`
       }
       
-      // 立即显示初始进度并开始准备阶段模拟
-      let currentProgress = 5 // 从5%开始，更明显
+      // Immediately show initial progress and start preparation phase simulation
+      let currentProgress = 5 // Start from 5% for more visibility
       updateDownloadState(formatIndex, {
         progress: currentProgress,
         status: 'preparing'
@@ -181,25 +181,25 @@ export function DownloaderSection() {
       
       console.log(`Starting download for format ${formatIndex}, initial progress: ${currentProgress}%`)
       
-      // 监听下载进度
+      // Listen for download progress
       xhr.onprogress = (event) => {
         if (event.lengthComputable) {
-          // 将真实下载进度映射到20-100%范围
+          // Map real download progress to 20-100% range
           const rawProgress = (event.loaded / event.total) * 100
-          const progress = Math.round(20 + (rawProgress * 0.8)) // 20% + 80% * 真实进度
+          const progress = Math.round(20 + (rawProgress * 0.8)) // 20% + 80% * real progress
           const currentTime = Date.now()
-          const timeDiff = (currentTime - lastTime) / 1000 // 秒
+          const timeDiff = (currentTime - lastTime) / 1000 // seconds
           const bytesDiff = event.loaded - lastLoaded
           
-          // 计算下载速度 (每秒更新一次)
+          // Calculate download speed (update every second)
           let downloadSpeed = ''
           let estimatedTime = ''
           
-          if (timeDiff > 1) { // 每秒更新一次速度
+          if (timeDiff > 1) { // Update speed every second
             const speed = bytesDiff / timeDiff // bytes per second
             downloadSpeed = formatFileSize(speed) + '/s'
             
-            // 计算剩余时间
+            // Calculate remaining time
             const remainingBytes = event.total - event.loaded
             const remainingSeconds = remainingBytes / speed
             estimatedTime = formatTime(remainingSeconds)
@@ -220,14 +220,14 @@ export function DownloaderSection() {
         }
       }
       
-      // 监听下载完成
+      // Listen for download completion
       xhr.onload = () => {
         if (xhr.status === 200) {
-          // 下载完成，创建Blob URL并触发下载
+          // Download completed, create Blob URL and trigger download
           const blob = xhr.response
           const url = window.URL.createObjectURL(blob)
           
-          // 从响应头获取文件名，或使用默认名称
+          // Get filename from response headers, or use default name
           const contentDisposition = xhr.getResponseHeader('Content-Disposition')
           let filename = 'melolo_download'
           
@@ -238,7 +238,7 @@ export function DownloaderSection() {
             }
           }
           
-          // 创建下载链接
+          // Create download link
           const link = document.createElement('a')
           link.href = url
           link.download = filename
@@ -246,11 +246,11 @@ export function DownloaderSection() {
           document.body.appendChild(link)
           link.click()
           
-          // 清理资源
+          // Clean up resources
           document.body.removeChild(link)
           window.URL.revokeObjectURL(url)
           
-          // 更新状态为完成
+          // Update status to completed
           updateDownloadState(formatIndex, {
             progress: 100,
             status: 'completed',
@@ -258,7 +258,7 @@ export function DownloaderSection() {
             xhr: undefined
           })
           
-          // 3秒后重置状态
+          // Reset status after 3 seconds
           setTimeout(() => {
             updateDownloadState(formatIndex, {
               progress: 0,
@@ -271,7 +271,7 @@ export function DownloaderSection() {
         }
       }
       
-      // 监听错误
+      // Listen for errors
       xhr.onerror = () => {
         clearPreparingInterval()
         updateDownloadState(formatIndex, {
@@ -280,9 +280,9 @@ export function DownloaderSection() {
           isDownloading: false,
           xhr: undefined
         })
-        setError("网络错误，下载失败")
+        setError("Network error, download failed")
         
-        // 3秒后重置错误状态
+        // Reset error status after 3 seconds
         setTimeout(() => {
           updateDownloadState(formatIndex, {
             status: 'idle'
@@ -290,7 +290,7 @@ export function DownloaderSection() {
         }, 3000)
       }
       
-      // 监听取消/中断
+      // Listen for cancel/abort
       xhr.onabort = () => {
         clearPreparingInterval()
         updateDownloadState(formatIndex, {
@@ -300,7 +300,7 @@ export function DownloaderSection() {
           xhr: undefined
         })
         
-        // 3秒后重置状态
+        // Reset status after 3 seconds
         setTimeout(() => {
           updateDownloadState(formatIndex, {
             status: 'idle'
@@ -308,7 +308,7 @@ export function DownloaderSection() {
         }, 3000)
       }
       
-      // 监听超时
+      // Listen for timeout
       xhr.ontimeout = () => {
         clearPreparingInterval()
         updateDownloadState(formatIndex, {
@@ -316,9 +316,9 @@ export function DownloaderSection() {
           status: 'error',
           isDownloading: false
         })
-        setError("下载超时，请检查网络连接")
+        setError("Download timeout, please check your network connection")
         
-        // 3秒后重置错误状态
+        // Reset error status after 3 seconds
         setTimeout(() => {
           updateDownloadState(formatIndex, {
             status: 'idle'
@@ -326,45 +326,45 @@ export function DownloaderSection() {
         }, 3000)
       }
       
-      // 设置超时时间（10分钟）
+      // Set timeout (10 minutes)
       xhr.timeout = 10 * 60 * 1000
       
 
       
-      // 开始请求
+      // Start request
       xhr.open('GET', downloadUrl, true)
       
-      // 设置请求头（如果需要）
+      // Set request headers (if needed)
       xhr.setRequestHeader('Cache-Control', 'no-cache')
       
-      // 模拟准备阶段的进度增长
+      // Simulate progress growth in preparation phase
       let isPreparing = true
       
       const preparingInterval = setInterval(() => {
         if (isPreparing && currentProgress < 18) {
-          currentProgress += 3 // 每次增加3%，让变化更明显
+          currentProgress += 3 // Increase by 3% each time for more visibility
           updateDownloadState(formatIndex, {
             progress: currentProgress,
             status: 'preparing'
           })
           console.log(`Preparing progress updated: ${currentProgress}%`)
         }
-      }, 400) // 每400ms增加一点进度
+      }, 400) // Add a bit of progress every 400ms
       
-      // 清理准备进度定时器的函数
+      // Function to clear preparation progress timer
       const clearPreparingInterval = () => {
         console.log('Clearing preparing interval')
         isPreparing = false
         clearInterval(preparingInterval)
       }
       
-      // 在状态变化时清理准备进度
+      // Clean up preparation progress on state changes
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.OPENED) {
-          // 连接已打开，但继续准备阶段
+          // Connection opened, but continue preparation phase
           console.log('XHR opened')
         } else if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
-          // 收到响应头，清理准备进度，开始真正下载
+          // Headers received, clear preparation progress, start real download
           console.log('Headers received, clearing preparing interval')
           clearPreparingInterval()
           updateDownloadState(formatIndex, {
@@ -372,7 +372,7 @@ export function DownloaderSection() {
             status: 'downloading'
           })
         } else if (xhr.readyState === XMLHttpRequest.LOADING) {
-          // 开始接收数据
+          // Start receiving data
           console.log('Loading started')
           clearPreparingInterval()
         }
@@ -387,9 +387,9 @@ export function DownloaderSection() {
         status: 'error',
         isDownloading: false
       })
-      setError("下载失败，请稍后重试")
+      setError("Download failed, please try again later")
 
-      // 3秒后重置错误状态
+      // Reset error status after 3 seconds
       setTimeout(() => {
         updateDownloadState(formatIndex, {
           status: 'idle'
@@ -582,7 +582,7 @@ export function DownloaderSection() {
                               </div>
                               {downloadState.status === 'downloading' && downloadState.estimatedTime && (
                                 <div className="text-xs text-gray-400 mt-1 text-center">
-                                  剩余时间: {downloadState.estimatedTime}
+                                  Remaining time: {downloadState.estimatedTime}
                                 </div>
                               )}
                             </div>

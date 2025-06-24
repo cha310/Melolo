@@ -24,14 +24,39 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Invalid YouTube URL" }, { status: 400 })
     }
 
-    // Check if yt-dlp is available
+    // Check if yt-dlp is available with multiple possible paths
+    let ytDlpPath = 'yt-dlp'
     try {
-      await execPromise("which yt-dlp")
+      // Try to find yt-dlp in the system
+      const { stdout } = await execPromise("which yt-dlp")
+      ytDlpPath = stdout.trim()
     } catch (error) {
-      console.error("yt-dlp not found:", error)
-      return NextResponse.json({ 
-        message: "Video download service is currently unavailable. Please try again later." 
-      }, { status: 503 })
+      // Try common installation paths
+      const commonPaths = [
+        '/usr/local/bin/yt-dlp',
+        '/opt/homebrew/bin/yt-dlp', 
+        '/usr/bin/yt-dlp',
+        'yt-dlp'
+      ]
+      
+      let found = false
+      for (const path of commonPaths) {
+        try {
+          await execPromise(`${path} --version`)
+          ytDlpPath = path
+          found = true
+          break
+        } catch (e) {
+          continue
+        }
+      }
+      
+      if (!found) {
+        console.error("yt-dlp not found in any common paths:", error)
+        return NextResponse.json({ 
+          message: "Video download service is currently unavailable. Please try again later." 
+        }, { status: 503 })
+      }
     }
 
     // Create a temporary directory for downloads if it doesn't exist
@@ -49,10 +74,10 @@ export async function GET(request: Request) {
 
     if (isAudio) {
       // For audio-only downloads (download original format without conversion)
-      command = `yt-dlp -f ${format} -o "${outputPath}.%(ext)s" "${youtubeUrl}"`
+      command = `${ytDlpPath} -f ${format} -o "${outputPath}.%(ext)s" "${youtubeUrl}"`
     } else {
       // For video downloads
-      command = `yt-dlp -f ${format} -o "${outputPath}.%(ext)s" "${youtubeUrl}"`
+      command = `${ytDlpPath} -f ${format} -o "${outputPath}.%(ext)s" "${youtubeUrl}"`
     }
 
     // Execute the command with timeout
