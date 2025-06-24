@@ -1,3 +1,21 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy - Melolo YouTube Downloader",
+  description: "Learn about Melolo's privacy policy and how we protect your personal information when using our YouTube video downloader service.",
+  keywords: "privacy policy, data protection, Melolo, YouTube downloader privacy",
+  alternates: {
+    canonical: "https://melolo.cc/privacy-policy"
+  },
+  openGraph: {
+    title: "Privacy Policy - Melolo YouTube Downloader",
+    description: "Learn about Melolo's privacy policy and how we protect your personal information.",
+    url: "https://melolo.cc/privacy-policy",
+    siteName: "Melolo",
+    type: "website"
+  }
+}
+
 export default function PrivacyPolicy() {
   return (
     <main className="min-h-screen bg-white py-12 px-4">

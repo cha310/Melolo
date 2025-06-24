@@ -1,3 +1,21 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Terms of Service - Melolo YouTube Downloader",
+  description: "Read the terms of service for using Melolo's YouTube video downloader. Learn about usage rights, copyright policies, and service limitations.",
+  keywords: "terms of service, usage rights, copyright policy, Melolo terms, YouTube downloader terms",
+  alternates: {
+    canonical: "https://melolo.cc/terms-of-service"
+  },
+  openGraph: {
+    title: "Terms of Service - Melolo YouTube Downloader",
+    description: "Read the terms of service for using Melolo's YouTube video downloader.",
+    url: "https://melolo.cc/terms-of-service",
+    siteName: "Melolo",
+    type: "website"
+  }
+}
+
 export default function TermsOfService() {
   return (
     <main className="min-h-screen bg-white py-12 px-4">
