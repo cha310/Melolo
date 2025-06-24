@@ -103,10 +103,15 @@ export function DownloaderSection() {
   }
 
   const updateDownloadState = (index: number, state: Partial<DownloadState>) => {
-    setDownloadStates(prev => ({
-      ...prev,
-      [index]: { ...prev[index], ...state }
-    }))
+    console.log(`Updating download state for index ${index}:`, state)
+    setDownloadStates(prev => {
+      const newState = {
+        ...prev,
+        [index]: { ...prev[index], ...state }
+      }
+      console.log(`New download states:`, newState)
+      return newState
+    })
   }
 
   const cancelDownload = (formatIndex: number) => {
@@ -167,10 +172,21 @@ export function DownloaderSection() {
         return `${minutes}分${remainingSeconds}秒`
       }
       
+      // 立即显示初始进度并开始准备阶段模拟
+      let currentProgress = 5 // 从5%开始，更明显
+      updateDownloadState(formatIndex, {
+        progress: currentProgress,
+        status: 'preparing'
+      })
+      
+      console.log(`Starting download for format ${formatIndex}, initial progress: ${currentProgress}%`)
+      
       // 监听下载进度
       xhr.onprogress = (event) => {
         if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100)
+          // 将真实下载进度映射到20-100%范围
+          const rawProgress = (event.loaded / event.total) * 100
+          const progress = Math.round(20 + (rawProgress * 0.8)) // 20% + 80% * 真实进度
           const currentTime = Date.now()
           const timeDiff = (currentTime - lastTime) / 1000 // 秒
           const bytesDiff = event.loaded - lastLoaded
@@ -257,6 +273,7 @@ export function DownloaderSection() {
       
       // 监听错误
       xhr.onerror = () => {
+        clearPreparingInterval()
         updateDownloadState(formatIndex, {
           progress: 0,
           status: 'error',
@@ -275,6 +292,7 @@ export function DownloaderSection() {
       
       // 监听取消/中断
       xhr.onabort = () => {
+        clearPreparingInterval()
         updateDownloadState(formatIndex, {
           progress: 0,
           status: 'cancelled',
@@ -292,6 +310,7 @@ export function DownloaderSection() {
       
       // 监听超时
       xhr.ontimeout = () => {
+        clearPreparingInterval()
         updateDownloadState(formatIndex, {
           progress: 0,
           status: 'error',
@@ -310,21 +329,54 @@ export function DownloaderSection() {
       // 设置超时时间（10分钟）
       xhr.timeout = 10 * 60 * 1000
       
-      // 监听状态变化
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
-          // 收到响应头，更新状态为下载中
-          updateDownloadState(formatIndex, {
-            status: 'downloading'
-          })
-        }
-      }
+
       
       // 开始请求
       xhr.open('GET', downloadUrl, true)
       
       // 设置请求头（如果需要）
       xhr.setRequestHeader('Cache-Control', 'no-cache')
+      
+      // 模拟准备阶段的进度增长
+      let isPreparing = true
+      
+      const preparingInterval = setInterval(() => {
+        if (isPreparing && currentProgress < 18) {
+          currentProgress += 3 // 每次增加3%，让变化更明显
+          updateDownloadState(formatIndex, {
+            progress: currentProgress,
+            status: 'preparing'
+          })
+          console.log(`Preparing progress updated: ${currentProgress}%`)
+        }
+      }, 400) // 每400ms增加一点进度
+      
+      // 清理准备进度定时器的函数
+      const clearPreparingInterval = () => {
+        console.log('Clearing preparing interval')
+        isPreparing = false
+        clearInterval(preparingInterval)
+      }
+      
+      // 在状态变化时清理准备进度
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === XMLHttpRequest.OPENED) {
+          // 连接已打开，但继续准备阶段
+          console.log('XHR opened')
+        } else if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+          // 收到响应头，清理准备进度，开始真正下载
+          console.log('Headers received, clearing preparing interval')
+          clearPreparingInterval()
+          updateDownloadState(formatIndex, {
+            progress: 20,
+            status: 'downloading'
+          })
+        } else if (xhr.readyState === XMLHttpRequest.LOADING) {
+          // 开始接收数据
+          console.log('Loading started')
+          clearPreparingInterval()
+        }
+      }
       
       xhr.send()
       
@@ -453,7 +505,7 @@ export function DownloaderSection() {
                                 {downloadState.isDownloading ? (
                                   <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    {downloadState.status === 'preparing' && 'Preparing...'}
+                                    {downloadState.status === 'preparing' && `Preparing... ${downloadState.progress}%`}
                                     {downloadState.status === 'downloading' && (
                                       <span>
                                         Downloading {downloadState.progress}%
@@ -507,9 +559,6 @@ export function DownloaderSection() {
                               <Progress 
                                 value={downloadState.progress} 
                                 className="w-full h-3 bg-gray-200"
-                                style={{
-                                  '--progress-background': '#6122f2'
-                                } as React.CSSProperties}
                               />
                               <div className="flex justify-between text-xs text-gray-500 mt-1">
                                 <span>
