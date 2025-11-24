@@ -442,6 +442,17 @@ export function DownloaderSection() {
           </div>
         </form>
 
+        <div className="flex justify-center mb-8">
+          <a
+            href="https://hardypistol.com/d1nif2fsbd?key=ed01468be44a107988fafb27d6d7a645"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Partner Support
+          </a>
+        </div>
+
         {/* Features Section */}
         <div className="flex flex-wrap justify-center items-center gap-8 mb-8">
           <div className="flex items-center gap-2">

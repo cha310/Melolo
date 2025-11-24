@@ -26,6 +26,16 @@ export function Footer() {
                   Downloader
                 </Link>
               </li>
+              <li>
+                <a 
+                  href="https://hardypistol.com/pviupksk?key=7ebfbacb7aeceee3d5dc76a3b63078b0" 
+                  className="text-gray-400 hover:text-white transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Partner
+                </a>
+              </li>
             </ul>
           </div>
 
