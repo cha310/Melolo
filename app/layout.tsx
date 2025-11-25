@@ -47,8 +47,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3881719379229226"
-             crossorigin="anonymous"></script>
         <script type='text/javascript' src='//hardypistol.com/5f/87/f6/5f87f64cbf383b9312f69bfa6d8f1b44.js'></script>
       </head>
       <body className={inter.className}>
